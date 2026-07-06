@@ -1,0 +1,1268 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>DewQRaft</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --paper: #f4efe5;
+      --paper-2: #fffaf0;
+      --ink: #1c2430;
+      --muted: #6d6a62;
+      --line: rgba(28, 36, 48, 0.14);
+      --accent: #255fc5;
+      --accent-dark: #173f8c;
+      --soft: rgba(37, 95, 197, 0.09);
+      --shadow: 0 24px 60px rgba(52, 44, 31, 0.18);
+      font-family: "SF Pro Display", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      width: 560px;
+      height: 520px;
+      margin: 0;
+      overflow: hidden;
+      background:
+        radial-gradient(circle at 8% 5%, color-mix(in srgb, var(--accent) 14%, transparent), transparent 32%),
+        radial-gradient(circle at 92% 8%, rgba(188, 124, 49, 0.12), transparent 32%),
+        linear-gradient(145deg, var(--paper), #f8f3e9 52%, #ece2d0);
+      color: var(--ink);
+    }
+
+    button, input, textarea, select { font: inherit; }
+    button { border: 0; cursor: pointer; }
+
+    .app {
+      display: grid;
+      grid-template-columns: 250px 1fr;
+      gap: 14px;
+      width: 100%;
+      height: 100%;
+      padding: 16px;
+    }
+
+    .left {
+      display: grid;
+      grid-template-rows: auto auto 1fr auto;
+      gap: 12px;
+      min-height: 0;
+      overflow: hidden;
+    }
+
+    .right {
+      display: grid;
+      grid-template-rows: 1fr auto auto;
+      gap: 12px;
+      min-height: 0;
+      overflow: hidden;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+    }
+
+    .mark {
+      display: grid;
+      place-items: center;
+      width: 40px;
+      height: 40px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: var(--paper-2);
+      box-shadow: 0 12px 26px rgba(52, 44, 31, 0.12);
+      color: var(--accent);
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 22px;
+      line-height: 1;
+      letter-spacing: 0;
+    }
+
+    .subtitle {
+      margin-top: 3px;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    .icon-button {
+      display: grid;
+      place-items: center;
+      flex: 0 0 auto;
+      width: 36px;
+      height: 36px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: rgba(255, 250, 240, 0.7);
+      color: var(--muted);
+    }
+
+    .icon-button.active,
+    .icon-button:hover {
+      color: var(--accent-dark);
+      border-color: color-mix(in srgb, var(--accent) 36%, transparent);
+      background: var(--soft);
+    }
+
+    .tabs {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6px;
+    }
+
+    .tab {
+      height: 30px;
+      border: 1px solid var(--line);
+      border-radius: 9px;
+      background: rgba(255, 250, 240, 0.64);
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 800;
+    }
+
+    .tab.active {
+      border-color: rgba(37, 95, 197, 0.34);
+      background: var(--soft);
+      color: var(--accent-dark);
+    }
+
+    .panel {
+      display: grid;
+      gap: 14px;
+      align-content: start;
+      min-height: 0;
+      overflow-y: auto;
+      padding: 10px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: rgba(255, 250, 240, 0.66);
+      box-shadow: 0 14px 34px rgba(52, 44, 31, 0.1);
+      scrollbar-width: thin;
+    }
+
+    label {
+      display: grid;
+      gap: 7px;
+      color: var(--muted);
+      font-size: 10px;
+      font-weight: 820;
+      text-transform: uppercase;
+    }
+
+    input, textarea, select {
+      width: 100%;
+      min-width: 0;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      outline: none;
+      background: rgba(255, 255, 255, 0.72);
+      color: var(--ink);
+      font-weight: 650;
+    }
+
+    input, select {
+      height: 34px;
+      padding: 0 10px;
+    }
+
+    textarea {
+      height: 74px;
+      resize: vertical;
+      padding: 9px 10px;
+      line-height: 1.35;
+    }
+
+    input[type="color"] {
+      height: 34px;
+      padding: 3px;
+      cursor: pointer;
+    }
+
+    .field-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px 10px;
+    }
+
+    .mode-fields {
+      display: grid;
+      gap: 12px;
+    }
+
+    .hidden { display: none !important; }
+
+    .settings {
+      display: grid;
+      gap: 8px;
+      padding: 10px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: rgba(255, 250, 240, 0.54);
+    }
+
+    .theme-settings {
+      display: none;
+      gap: 8px;
+      padding: 10px;
+      border: 1px solid color-mix(in srgb, var(--accent) 28%, transparent);
+      border-radius: 14px;
+      background: color-mix(in srgb, var(--accent) 8%, var(--paper-2));
+    }
+
+    .theme-settings.active {
+      display: grid;
+    }
+
+    .settings-title {
+      margin: 0;
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    .toggle-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: none;
+    }
+
+    .toggle-row input {
+      width: 18px;
+      height: 18px;
+      accent-color: var(--accent);
+    }
+
+    .preview-card {
+      display: grid;
+      place-items: center;
+      min-height: 0;
+      padding: 16px;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.56), rgba(255, 250, 240, 0.7)),
+        var(--paper-2);
+      box-shadow: var(--shadow);
+    }
+
+    .qr-frame {
+      display: grid;
+      place-items: center;
+      width: 236px;
+      height: 236px;
+      border: 1px solid rgba(28, 36, 48, 0.1);
+      border-radius: 18px;
+      background: white;
+      box-shadow: inset 0 0 0 10px white, 0 14px 30px rgba(52, 44, 31, 0.12);
+    }
+
+    canvas {
+      width: 186px;
+      height: 186px;
+      image-rendering: pixelated;
+    }
+
+    .empty-qr {
+      display: grid;
+      place-items: center;
+      width: 186px;
+      height: 186px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 800;
+      text-align: center;
+    }
+
+    .payload {
+      display: grid;
+      grid-template-rows: auto 1fr;
+      height: 64px;
+      min-height: 0;
+      padding: 10px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: rgba(255, 250, 240, 0.68);
+      overflow: hidden;
+    }
+
+    .payload-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 6px;
+    }
+
+    .payload-title {
+      margin: 0;
+      font-size: 11px;
+      color: var(--muted);
+      font-weight: 850;
+      text-transform: uppercase;
+    }
+
+    .status {
+      color: var(--accent-dark);
+      font-size: 11px;
+      font-weight: 900;
+    }
+
+    .status.error { color: #a1372b; }
+
+    code {
+      display: block;
+      min-height: 0;
+      overflow: auto;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+      color: #2d3440;
+      font: 11px ui-monospace, SFMono-Regular, Menlo, monospace;
+      scrollbar-width: thin;
+    }
+
+    .actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .primary, .secondary {
+      height: 38px;
+      border-radius: 10px;
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    .primary {
+      background: var(--accent);
+      color: white;
+      box-shadow: 0 12px 24px rgba(37, 95, 197, 0.2);
+    }
+
+    .primary:disabled, .secondary:disabled {
+      cursor: not-allowed;
+      opacity: 0.45;
+    }
+
+    .secondary {
+      border: 1px solid var(--line);
+      background: rgba(255, 250, 240, 0.76);
+      color: var(--ink);
+    }
+
+    .toast-stack {
+      position: absolute;
+      right: 16px;
+      bottom: 16px;
+      display: grid;
+      gap: 8px;
+      pointer-events: none;
+    }
+
+    .toast {
+      max-width: 220px;
+      padding: 9px 11px;
+      border: 1px solid rgba(37, 95, 197, 0.18);
+      border-radius: 10px;
+      background: rgba(255, 250, 240, 0.94);
+      color: var(--ink);
+      box-shadow: 0 14px 30px rgba(52, 44, 31, 0.16);
+      font-size: 12px;
+      font-weight: 760;
+      transition: opacity 180ms ease, transform 180ms ease;
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <section class="left">
+      <header class="topbar">
+        <div class="brand">
+          <div class="mark" aria-hidden="true">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+              <rect x="3" y="3" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="2"/>
+              <rect x="14" y="3" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="2"/>
+              <rect x="3" y="14" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="2"/>
+              <path d="M14 15h3v-3M17 18h4M14 21h2M20 14h1v2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <div>
+            <h1>DewQRaft</h1>
+            <div class="subtitle">Craft scannable codes</div>
+          </div>
+        </div>
+        <button class="icon-button" id="themeButton" type="button" title="Popup colour" aria-label="Popup colour">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z" stroke="currentColor" stroke-width="2"/>
+            <path d="M19.4 15a1.8 1.8 0 0 0 .36 2l.05.05a2.1 2.1 0 0 1-2.97 2.97l-.05-.05a1.8 1.8 0 0 0-2-.36 1.8 1.8 0 0 0-1.08 1.65V21a2.1 2.1 0 0 1-4.2 0v-.07A1.8 1.8 0 0 0 8.4 19.3a1.8 1.8 0 0 0-2 .36l-.05.05a2.1 2.1 0 1 1-2.97-2.97l.05-.05a1.8 1.8 0 0 0 .36-2 1.8 1.8 0 0 0-1.65-1.08H2a2.1 2.1 0 0 1 0-4.2h.07A1.8 1.8 0 0 0 3.7 8.4a1.8 1.8 0 0 0-.36-2l-.05-.05A2.1 2.1 0 1 1 6.26 3.4l.05.05a1.8 1.8 0 0 0 2 .36h.01A1.8 1.8 0 0 0 9.4 2.15V2a2.1 2.1 0 0 1 4.2 0v.07a1.8 1.8 0 0 0 1.08 1.65 1.8 1.8 0 0 0 2-.36l.05-.05a2.1 2.1 0 1 1 2.97 2.97l-.05.05a1.8 1.8 0 0 0-.36 2v.01A1.8 1.8 0 0 0 21.85 9.4H22a2.1 2.1 0 0 1 0 4.2h-.07A1.8 1.8 0 0 0 20.3 14.7l-.9.3Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+        </button>
+      </header>
+
+      <nav class="tabs" aria-label="Payload type">
+        <button class="tab active" data-mode="text" type="button">Text</button>
+        <button class="tab" data-mode="wifi" type="button">Wi-Fi</button>
+        <button class="tab" data-mode="contact" type="button">Contact</button>
+        <button class="tab" data-mode="email" type="button">Email</button>
+        <button class="tab" data-mode="phone" type="button">Phone</button>
+        <button class="tab" data-mode="sms" type="button">SMS</button>
+      </nav>
+
+      <section class="panel">
+        <section class="theme-settings" id="themePanel">
+          <p class="settings-title">Popup Colour</p>
+          <div class="field-grid">
+            <label>Accent
+              <input id="uiAccent" type="color" value="#255fc5">
+            </label>
+            <label>Paper
+              <input id="uiPaper" type="color" value="#f4efe5">
+            </label>
+          </div>
+        </section>
+
+        <div class="mode-fields" data-fields="text">
+          <label>Content
+            <textarea id="textValue">https://dewflash.dev</textarea>
+          </label>
+        </div>
+
+        <div class="mode-fields hidden" data-fields="wifi">
+          <label>Network name
+            <input id="wifiSsid" type="text" placeholder="Enter network name">
+          </label>
+          <label>Password
+            <input id="wifiPassword" type="text" placeholder="Enter password">
+          </label>
+          <div class="field-grid">
+            <label>Security
+              <select id="wifiSecurity">
+                <option value="WPA">WPA/WPA2</option>
+                <option value="WEP">WEP</option>
+                <option value="nopass">None</option>
+              </select>
+            </label>
+            <label class="toggle-row">Hidden
+              <input id="wifiHidden" type="checkbox">
+            </label>
+          </div>
+        </div>
+
+        <div class="mode-fields hidden" data-fields="contact">
+          <label>Name
+            <input id="contactName" type="text" placeholder="Enter name">
+          </label>
+          <div class="field-grid">
+            <label>Phone
+              <input id="contactPhone" type="text" placeholder="Enter phone">
+            </label>
+            <label>Email
+              <input id="contactEmail" type="email" placeholder="Enter email">
+            </label>
+          </div>
+          <div class="field-grid">
+            <label>Company
+              <input id="contactCompany" type="text">
+            </label>
+            <label>Website
+              <input id="contactWebsite" type="url">
+            </label>
+          </div>
+        </div>
+
+        <div class="mode-fields hidden" data-fields="email">
+          <label>To
+            <input id="emailTo" type="email" placeholder="Enter email">
+          </label>
+          <label>Subject
+            <input id="emailSubject" type="text" placeholder="Enter subject">
+          </label>
+          <label>Body
+            <textarea id="emailBody"></textarea>
+          </label>
+        </div>
+
+        <div class="mode-fields hidden" data-fields="phone">
+          <label>Phone number
+            <input id="phoneNumber" type="text" placeholder="Enter phone">
+          </label>
+        </div>
+
+        <div class="mode-fields hidden" data-fields="sms">
+          <label>Phone number
+            <input id="smsNumber" type="text" placeholder="Enter phone">
+          </label>
+          <label>Message
+            <textarea id="smsBody"></textarea>
+          </label>
+        </div>
+
+        <div class="field-grid">
+          <label>Correction
+            <select id="errorLevel">
+              <option value="M">Medium</option>
+              <option value="Q">High</option>
+              <option value="L">Low</option>
+              <option value="H">Very high</option>
+            </select>
+          </label>
+          <label>Size
+            <select id="exportSize">
+              <option value="1024">1024 px</option>
+              <option value="512">512 px</option>
+              <option value="2048">2048 px</option>
+            </select>
+          </label>
+        </div>
+
+        <div class="settings">
+          <p class="settings-title">Appearance</p>
+          <div class="field-grid">
+            <label>Ink
+              <input id="foreground" type="color" value="#111111">
+            </label>
+            <label>Paper
+              <input id="background" type="color" value="#ffffff">
+            </label>
+          </div>
+          <label>Background
+            <select id="backgroundMode">
+              <option value="solid">Solid paper</option>
+              <option value="transparent">Transparent</option>
+            </select>
+          </label>
+        </div>
+      </section>
+
+      <button class="secondary" id="resetButton" type="button">Reset</button>
+    </section>
+
+    <section class="right">
+      <section class="preview-card">
+        <div class="qr-frame" id="qrFrame">
+          <canvas id="qrCanvas" width="1024" height="1024"></canvas>
+          <div class="empty-qr hidden" id="emptyQr">Enter content to craft a QR</div>
+        </div>
+      </section>
+
+      <section class="payload">
+        <div class="payload-top">
+          <p class="payload-title">Payload</p>
+          <span class="status" id="statusLabel">Ready</span>
+        </div>
+        <code id="payloadPreview">https://dewflash.dev</code>
+      </section>
+
+      <section class="actions">
+        <button class="primary" id="copyPngButton" type="button">Copy PNG</button>
+        <button class="primary" id="savePngButton" type="button">Save PNG...</button>
+        <button class="secondary" id="copySvgButton" type="button">Copy SVG</button>
+        <button class="secondary" id="saveSvgButton" type="button">Save SVG...</button>
+      </section>
+    </section>
+  </main>
+  <div class="toast-stack" id="toastStack" aria-live="polite"></div>
+
+  <script src="vendor/qrcode.js"></script>
+  <script src="vendor/qrcode_UTF8.js"></script>
+  <script>
+    (() => {
+      const THEME_KEY = "dewqraft.popupTheme.v1";
+      const DEFAULT_THEME = { accent: "#255fc5", paper: "#f4efe5" };
+      const elements = {
+        tabs: Array.from(document.querySelectorAll(".tab")),
+        fields: Array.from(document.querySelectorAll(".mode-fields")),
+        themeButton: document.getElementById("themeButton"),
+        themePanel: document.getElementById("themePanel"),
+        uiAccent: document.getElementById("uiAccent"),
+        uiPaper: document.getElementById("uiPaper"),
+        textValue: document.getElementById("textValue"),
+        wifiSsid: document.getElementById("wifiSsid"),
+        wifiPassword: document.getElementById("wifiPassword"),
+        wifiSecurity: document.getElementById("wifiSecurity"),
+        wifiHidden: document.getElementById("wifiHidden"),
+        contactName: document.getElementById("contactName"),
+        contactPhone: document.getElementById("contactPhone"),
+        contactEmail: document.getElementById("contactEmail"),
+        contactCompany: document.getElementById("contactCompany"),
+        contactWebsite: document.getElementById("contactWebsite"),
+        emailTo: document.getElementById("emailTo"),
+        emailSubject: document.getElementById("emailSubject"),
+        emailBody: document.getElementById("emailBody"),
+        phoneNumber: document.getElementById("phoneNumber"),
+        smsNumber: document.getElementById("smsNumber"),
+        smsBody: document.getElementById("smsBody"),
+        errorLevel: document.getElementById("errorLevel"),
+        exportSize: document.getElementById("exportSize"),
+        foreground: document.getElementById("foreground"),
+        background: document.getElementById("background"),
+        backgroundMode: document.getElementById("backgroundMode"),
+        resetButton: document.getElementById("resetButton"),
+        qrCanvas: document.getElementById("qrCanvas"),
+        emptyQr: document.getElementById("emptyQr"),
+        payloadPreview: document.getElementById("payloadPreview"),
+        statusLabel: document.getElementById("statusLabel"),
+        copyPngButton: document.getElementById("copyPngButton"),
+        savePngButton: document.getElementById("savePngButton"),
+        copySvgButton: document.getElementById("copySvgButton"),
+        saveSvgButton: document.getElementById("saveSvgButton"),
+        toastStack: document.getElementById("toastStack")
+      };
+
+      let activeMode = "text";
+      let latest = null;
+      let popupTheme = loadPopupTheme();
+      applyPopupTheme();
+
+      const ECC_CODEWORDS = {
+        L: [0, 7, 10, 15, 20, 26, 18, 20, 24, 30, 18],
+        M: [0, 10, 16, 26, 18, 24, 16, 18, 22, 22, 26],
+        Q: [0, 13, 22, 18, 26, 18, 24, 18, 22, 20, 24],
+        H: [0, 17, 28, 22, 16, 22, 28, 26, 26, 24, 28]
+      };
+      const ECC_BLOCKS = {
+        L: [0, 1, 1, 1, 1, 1, 2, 2, 2, 2, 4],
+        M: [0, 1, 1, 1, 2, 2, 4, 4, 4, 5, 5],
+        Q: [0, 1, 1, 2, 2, 4, 4, 6, 6, 8, 8],
+        H: [0, 1, 1, 2, 4, 4, 4, 5, 6, 8, 8]
+      };
+      const TOTAL_CODEWORDS = [0, 26, 44, 70, 100, 134, 172, 196, 242, 292, 346];
+      const ALIGNMENT_POSITIONS = [
+        [],
+        [],
+        [6, 18],
+        [6, 22],
+        [6, 26],
+        [6, 30],
+        [6, 34],
+        [6, 22, 38],
+        [6, 24, 42],
+        [6, 26, 46],
+        [6, 28, 50]
+      ];
+
+      const gfExp = Array(512).fill(0);
+      const gfLog = Array(256).fill(0);
+      let value = 1;
+      for (let i = 0; i < 255; i++) {
+        gfExp[i] = value;
+        gfLog[value] = i;
+        value <<= 1;
+        if (value & 0x100) value ^= 0x11D;
+      }
+      for (let i = 255; i < 512; i++) gfExp[i] = gfExp[i - 255];
+
+      function gfMultiply(a, b) {
+        return a && b ? gfExp[gfLog[a] + gfLog[b]] : 0;
+      }
+
+      function rsDivisor(degree) {
+        let result = [1];
+        for (let i = 0; i < degree; i++) {
+          const next = Array(result.length + 1).fill(0);
+          for (let j = 0; j < result.length; j++) {
+            next[j] ^= result[j];
+            next[j + 1] ^= gfMultiply(result[j], gfExp[i]);
+          }
+          result = next;
+        }
+        return result;
+      }
+
+      function rsRemainder(data, degree) {
+        const divisor = rsDivisor(degree);
+        const result = Array(degree).fill(0);
+        for (const byte of data) {
+          const factor = byte ^ result.shift();
+          result.push(0);
+          for (let i = 0; i < degree; i++) {
+            result[i] ^= gfMultiply(divisor[i + 1], factor);
+          }
+        }
+        return result;
+      }
+
+      class BitBuffer {
+        constructor() { this.bits = []; }
+        append(value, length) {
+          for (let i = length - 1; i >= 0; i--) this.bits.push((value >>> i) & 1);
+        }
+        toBytes() {
+          const bytes = [];
+          for (let i = 0; i < this.bits.length; i += 8) {
+            let byte = 0;
+            for (let j = 0; j < 8; j++) byte = (byte << 1) | (this.bits[i + j] || 0);
+            bytes.push(byte);
+          }
+          return bytes;
+        }
+      }
+
+      function makeQr(text, level) {
+        const qr = qrcode(0, level);
+        qr.addData(text);
+        qr.make();
+        const size = qr.getModuleCount();
+        return Array.from({ length: size }, (_, row) =>
+          Array.from({ length: size }, (_, col) => qr.isDark(row, col))
+        );
+      }
+
+      function encodeQr(data, version, level, dataCapacity, countBits) {
+        const bits = new BitBuffer();
+        bits.append(0x4, 4);
+        bits.append(data.length, countBits);
+        data.forEach((byte) => bits.append(byte, 8));
+        const maxBits = dataCapacity * 8;
+        bits.append(0, Math.min(4, maxBits - bits.bits.length));
+        while (bits.bits.length % 8) bits.append(0, 1);
+        const codewords = bits.toBytes();
+        for (let pad = 0; codewords.length < dataCapacity; pad ^= 1) codewords.push(pad ? 0x11 : 0xEC);
+        const allCodewords = addEccAndInterleave(codewords, version, level);
+        return drawQr(version, level, allCodewords);
+      }
+
+      function addEccAndInterleave(data, version, level) {
+        const blockCount = ECC_BLOCKS[level][version];
+        const eccLen = ECC_CODEWORDS[level][version];
+        const rawCount = TOTAL_CODEWORDS[version];
+        const shortBlocks = blockCount - rawCount % blockCount;
+        const shortLen = Math.floor(rawCount / blockCount);
+        const blocks = [];
+        let offset = 0;
+        for (let i = 0; i < blockCount; i++) {
+          const dataLen = shortLen - eccLen + (i < shortBlocks ? 0 : 1);
+          const dat = data.slice(offset, offset + dataLen);
+          offset += dataLen;
+          blocks.push({ data: dat, ecc: rsRemainder(dat, eccLen) });
+        }
+        const result = [];
+        const maxData = Math.max(...blocks.map((block) => block.data.length));
+        for (let i = 0; i < maxData; i++) {
+          blocks.forEach((block) => { if (i < block.data.length) result.push(block.data[i]); });
+        }
+        for (let i = 0; i < eccLen; i++) blocks.forEach((block) => result.push(block.ecc[i]));
+        return result;
+      }
+
+      function drawQr(version, level, codewords) {
+        const size = version * 4 + 17;
+        const base = Array.from({ length: size }, () => Array(size).fill(false));
+        const func = Array.from({ length: size }, () => Array(size).fill(false));
+
+        const setFunc = (x, y, dark) => {
+          if (x >= 0 && x < size && y >= 0 && y < size) {
+            base[y][x] = dark;
+            func[y][x] = true;
+          }
+        };
+        const setModule = (x, y, dark) => { base[y][x] = dark; };
+
+        drawFinder(setFunc, 3, 3);
+        drawFinder(setFunc, size - 4, 3);
+        drawFinder(setFunc, 3, size - 4);
+        for (let i = 0; i < size; i++) {
+          if (!func[6][i]) setFunc(i, 6, i % 2 === 0);
+          if (!func[i][6]) setFunc(6, i, i % 2 === 0);
+        }
+        for (const y of ALIGNMENT_POSITIONS[version]) {
+          for (const x of ALIGNMENT_POSITIONS[version]) {
+            if (!func[y][x]) drawAlignment(setFunc, x, y);
+          }
+        }
+        setFunc(8, size - 8, true);
+        reserveFormat(func, size);
+        if (version >= 7) drawVersion(setFunc, version, size);
+
+        const bits = [];
+        codewords.forEach((byte) => {
+          for (let i = 7; i >= 0; i--) bits.push((byte >>> i) & 1);
+        });
+        let bitIndex = 0;
+        let upward = true;
+        for (let right = size - 1; right >= 1; right -= 2) {
+          if (right === 6) right--;
+          for (let vert = 0; vert < size; vert++) {
+            const y = upward ? size - 1 - vert : vert;
+            for (let dx = 0; dx < 2; dx++) {
+              const x = right - dx;
+              if (!func[y][x]) setModule(x, y, bitIndex < bits.length && bits[bitIndex++] === 1);
+            }
+          }
+          upward = !upward;
+        }
+
+        let best = null;
+        for (let mask = 0; mask < 8; mask++) {
+          const modules = base.map((row) => row.slice());
+          applyMask(modules, func, mask);
+          drawFormat(modules, level, mask);
+          const penalty = scorePenalty(modules);
+          if (!best || penalty < best.penalty) best = { modules, mask, penalty };
+        }
+        return best.modules;
+      }
+
+      function drawFinder(setFunc, cx, cy) {
+        for (let dy = -4; dy <= 4; dy++) {
+          for (let dx = -4; dx <= 4; dx++) {
+            const dist = Math.max(Math.abs(dx), Math.abs(dy));
+            const dark = dist <= 3 && (dist === 3 || Math.max(Math.abs(dx), Math.abs(dy)) <= 1);
+            setFunc(cx + dx, cy + dy, dark);
+          }
+        }
+      }
+
+      function drawAlignment(setFunc, cx, cy) {
+        for (let dy = -2; dy <= 2; dy++) {
+          for (let dx = -2; dx <= 2; dx++) setFunc(cx + dx, cy + dy, Math.max(Math.abs(dx), Math.abs(dy)) !== 1);
+        }
+      }
+
+      function reserveFormat(func, size) {
+        for (let i = 0; i < 9; i++) {
+          func[8][i] = true;
+          func[i][8] = true;
+        }
+        for (let i = size - 8; i < size; i++) {
+          func[8][i] = true;
+          func[i][8] = true;
+        }
+      }
+
+      function drawVersion(setFunc, version, size) {
+        let rem = version;
+        for (let i = 0; i < 12; i++) rem = (rem << 1) ^ (((rem >>> 11) & 1) ? 0x1F25 : 0);
+        const bits = (version << 12) | rem;
+        for (let i = 0; i < 18; i++) {
+          const bit = ((bits >>> i) & 1) === 1;
+          setFunc(size - 11 + (i % 3), Math.floor(i / 3), bit);
+          setFunc(Math.floor(i / 3), size - 11 + (i % 3), bit);
+        }
+      }
+
+      function maskBit(mask, x, y) {
+        switch (mask) {
+          case 0: return (x + y) % 2 === 0;
+          case 1: return y % 2 === 0;
+          case 2: return x % 3 === 0;
+          case 3: return (x + y) % 3 === 0;
+          case 4: return (Math.floor(x / 3) + Math.floor(y / 2)) % 2 === 0;
+          case 5: return ((x * y) % 2) + ((x * y) % 3) === 0;
+          case 6: return (((x * y) % 2) + ((x * y) % 3)) % 2 === 0;
+          default: return (((x + y) % 2) + ((x * y) % 3)) % 2 === 0;
+        }
+      }
+
+      function applyMask(modules, func, mask) {
+        for (let y = 0; y < modules.length; y++) {
+          for (let x = 0; x < modules.length; x++) {
+            if (!func[y][x] && maskBit(mask, x, y)) modules[y][x] = !modules[y][x];
+          }
+        }
+      }
+
+      function drawFormat(modules, level, mask) {
+        const size = modules.length;
+        const eclBits = { L: 1, M: 0, Q: 3, H: 2 }[level];
+        const data = (eclBits << 3) | mask;
+        let rem = data;
+        for (let i = 0; i < 10; i++) rem = (rem << 1) ^ (((rem >>> 9) & 1) ? 0x537 : 0);
+        const bits = ((data << 10) | rem) ^ 0x5412;
+        const bit = (i) => ((bits >>> i) & 1) === 1;
+        for (let i = 0; i <= 5; i++) modules[8][i] = bit(i);
+        modules[8][7] = bit(6);
+        modules[8][8] = bit(7);
+        modules[7][8] = bit(8);
+        for (let i = 9; i < 15; i++) modules[14 - i][8] = bit(i);
+        for (let i = 0; i < 8; i++) modules[size - 1 - i][8] = bit(i);
+        for (let i = 8; i < 15; i++) modules[8][size - 15 + i] = bit(i);
+        modules[size - 8][8] = true;
+      }
+
+      function scorePenalty(modules) {
+        const size = modules.length;
+        let result = 0;
+        for (let y = 0; y < size; y++) result += linePenalty(modules[y]);
+        for (let x = 0; x < size; x++) result += linePenalty(modules.map((row) => row[x]));
+        for (let y = 0; y < size - 1; y++) {
+          for (let x = 0; x < size - 1; x++) {
+            const color = modules[y][x];
+            if (color === modules[y][x + 1] && color === modules[y + 1][x] && color === modules[y + 1][x + 1]) result += 3;
+          }
+        }
+        const pattern = [true, false, true, true, true, false, true, false, false, false, false];
+        const reversed = pattern.slice().reverse();
+        for (let y = 0; y < size; y++) {
+          for (let x = 0; x <= size - 11; x++) {
+            const run = modules[y].slice(x, x + 11);
+            if (samePattern(run, pattern) || samePattern(run, reversed)) result += 40;
+          }
+        }
+        for (let x = 0; x < size; x++) {
+          for (let y = 0; y <= size - 11; y++) {
+            const run = modules.slice(y, y + 11).map((row) => row[x]);
+            if (samePattern(run, pattern) || samePattern(run, reversed)) result += 40;
+          }
+        }
+        const dark = modules.flat().filter(Boolean).length;
+        const percent = (dark * 100) / (size * size);
+        result += Math.floor(Math.abs(percent - 50) / 5) * 10;
+        return result;
+      }
+
+      function linePenalty(line) {
+        let result = 0;
+        let runColor = line[0];
+        let runLen = 1;
+        for (let i = 1; i < line.length; i++) {
+          if (line[i] === runColor) {
+            runLen++;
+            if (runLen === 5) result += 3;
+            else if (runLen > 5) result++;
+          } else {
+            runColor = line[i];
+            runLen = 1;
+          }
+        }
+        return result;
+      }
+
+      function samePattern(a, b) {
+        return a.every((value, index) => value === b[index]);
+      }
+
+      function qrPayload() {
+        switch (activeMode) {
+          case "wifi":
+            return wifiPayload();
+          case "contact":
+            return contactPayload();
+          case "email":
+            return mailPayload();
+          case "phone":
+            return elements.phoneNumber.value.trim() ? `tel:${elements.phoneNumber.value.trim()}` : "";
+          case "sms":
+            return smsPayload();
+          default:
+            return elements.textValue.value.trim();
+        }
+      }
+
+      function wifiPayload() {
+        const ssid = elements.wifiSsid.value.trim();
+        if (!ssid) return "";
+        const type = elements.wifiSecurity.value;
+        const password = elements.wifiPassword.value;
+        const hidden = elements.wifiHidden.checked ? "true" : "false";
+        return `WIFI:T:${escapeWifi(type)};S:${escapeWifi(ssid)};P:${escapeWifi(password)};H:${hidden};;`;
+      }
+
+      function escapeWifi(value) {
+        return String(value).replace(/([\\;,":])/g, "\\$1");
+      }
+
+      function contactPayload() {
+        const name = elements.contactName.value.trim();
+        const phone = elements.contactPhone.value.trim();
+        const email = elements.contactEmail.value.trim();
+        const org = elements.contactCompany.value.trim();
+        const url = elements.contactWebsite.value.trim();
+        if (![name, phone, email, org, url].some(Boolean)) return "";
+        const lines = ["BEGIN:VCARD", "VERSION:3.0"];
+        if (name) lines.push(`FN:${escapeVcard(name)}`);
+        if (org) lines.push(`ORG:${escapeVcard(org)}`);
+        if (phone) lines.push(`TEL:${escapeVcard(phone)}`);
+        if (email) lines.push(`EMAIL:${escapeVcard(email)}`);
+        if (url) lines.push(`URL:${escapeVcard(url)}`);
+        lines.push("END:VCARD");
+        return lines.join("\n");
+      }
+
+      function escapeVcard(value) {
+        return String(value).replace(/\\/g, "\\\\").replace(/\n/g, "\\n").replace(/,/g, "\\,").replace(/;/g, "\\;");
+      }
+
+      function mailPayload() {
+        const to = elements.emailTo.value.trim();
+        const params = new URLSearchParams();
+        if (elements.emailSubject.value.trim()) params.set("subject", elements.emailSubject.value.trim());
+        if (elements.emailBody.value.trim()) params.set("body", elements.emailBody.value.trim());
+        return to || params.toString() ? `mailto:${to}${params.toString() ? `?${params}` : ""}` : "";
+      }
+
+      function smsPayload() {
+        const number = elements.smsNumber.value.trim().replace(/\s+/g, "");
+        if (!number) return "";
+        const message = elements.smsBody.value.trim();
+        return `sms:${number}${message ? `?body=${encodeURIComponent(message)}` : ""}`;
+      }
+
+      function render() {
+        const payload = qrPayload();
+        elements.payloadPreview.textContent = payload || "Empty";
+        const isEmpty = !payload;
+        setActionsDisabled(isEmpty);
+        if (isEmpty) {
+          latest = null;
+          elements.qrCanvas.classList.add("hidden");
+          elements.emptyQr.classList.remove("hidden");
+          setStatus("Empty", true);
+          return;
+        }
+
+        try {
+          const modules = makeQr(payload, elements.errorLevel.value);
+          latest = { payload, modules };
+          drawCanvas(modules, Number(elements.exportSize.value));
+          elements.qrCanvas.classList.remove("hidden");
+          elements.emptyQr.classList.add("hidden");
+          setStatus("Ready", false);
+        } catch (error) {
+          latest = null;
+          elements.qrCanvas.classList.add("hidden");
+          elements.emptyQr.classList.remove("hidden");
+          setStatus(error.message, true);
+          setActionsDisabled(true);
+        }
+      }
+
+      function drawCanvas(modules, size) {
+        const canvas = elements.qrCanvas;
+        canvas.width = size;
+        canvas.height = size;
+        const ctx = canvas.getContext("2d");
+        const bgMode = elements.backgroundMode.value;
+        ctx.clearRect(0, 0, size, size);
+        if (bgMode === "solid") {
+          ctx.fillStyle = elements.background.value;
+          ctx.fillRect(0, 0, size, size);
+        }
+        const quiet = 4;
+        const count = modules.length + quiet * 2;
+        const scale = Math.floor(size / count);
+        const offset = Math.floor((size - modules.length * scale) / 2);
+        ctx.fillStyle = elements.foreground.value;
+        for (let y = 0; y < modules.length; y++) {
+          for (let x = 0; x < modules.length; x++) {
+            if (modules[y][x]) ctx.fillRect(offset + x * scale, offset + y * scale, scale, scale);
+          }
+        }
+      }
+
+      function svgString() {
+        if (!latest) return "";
+        const size = Number(elements.exportSize.value);
+        const quiet = 4;
+        const count = latest.modules.length + quiet * 2;
+        const scale = size / count;
+        let rects = "";
+        for (let y = 0; y < latest.modules.length; y++) {
+          for (let x = 0; x < latest.modules.length; x++) {
+            if (latest.modules[y][x]) rects += `<rect x="${(x + quiet) * scale}" y="${(y + quiet) * scale}" width="${scale}" height="${scale}"/>`;
+          }
+        }
+        const bg = elements.backgroundMode.value === "solid"
+          ? `<rect width="100%" height="100%" fill="${elements.background.value}"/>`
+          : "";
+        return `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">${bg}<g fill="${elements.foreground.value}">${rects}</g></svg>`;
+      }
+
+      function pngDataUrl() {
+        if (!latest) return "";
+        drawCanvas(latest.modules, Number(elements.exportSize.value));
+        return elements.qrCanvas.toDataURL("image/png");
+      }
+
+      function postNative(message) {
+        const handler = window.webkit?.messageHandlers?.dewQRaftNative;
+        if (!handler) return false;
+        handler.postMessage(message);
+        return true;
+      }
+
+      function copyPng() {
+        const dataUrl = pngDataUrl();
+        if (!dataUrl) return;
+        if (postNative({ type: "copyPng", base64: dataUrl.split(",")[1] })) return;
+        fetch(dataUrl)
+          .then((res) => res.blob())
+          .then((blob) => navigator.clipboard.write([new ClipboardItem({ "image/png": blob })]))
+          .then(() => showToast("PNG copied"))
+          .catch(() => showToast("Copy not available"));
+      }
+
+      function savePng() {
+        const dataUrl = pngDataUrl();
+        if (!dataUrl) return;
+        const fileName = "dewqraft-code.png";
+        if (postNative({ type: "save", fileName, mime: "image/png", base64: dataUrl.split(",")[1] })) return;
+        download(dataUrl, fileName);
+      }
+
+      function copySvg() {
+        const svg = svgString();
+        if (!svg) return;
+        if (postNative({ type: "copyText", text: svg, label: "SVG copied" })) return;
+        navigator.clipboard.writeText(svg).then(() => showToast("SVG copied")).catch(() => showToast("Copy not available"));
+      }
+
+      function saveSvg() {
+        const svg = svgString();
+        if (!svg) return;
+        const fileName = "dewqraft-code.svg";
+        if (postNative({ type: "save", fileName, mime: "image/svg+xml", text: svg })) return;
+        download(`data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`, fileName);
+      }
+
+      function download(url, fileName) {
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = fileName;
+        link.click();
+      }
+
+      function setStatus(text, isError) {
+        elements.statusLabel.textContent = text;
+        elements.statusLabel.classList.toggle("error", isError);
+      }
+
+      function setActionsDisabled(disabled) {
+        [elements.copyPngButton, elements.savePngButton, elements.copySvgButton, elements.saveSvgButton].forEach((button) => {
+          button.disabled = disabled;
+        });
+      }
+
+      function loadPopupTheme() {
+        try {
+          const saved = JSON.parse(localStorage.getItem(THEME_KEY) || "null");
+          return {
+            accent: normalizeHex(saved?.accent) || DEFAULT_THEME.accent,
+            paper: normalizeHex(saved?.paper) || DEFAULT_THEME.paper
+          };
+        } catch {
+          return { ...DEFAULT_THEME };
+        }
+      }
+
+      function savePopupTheme() {
+        localStorage.setItem(THEME_KEY, JSON.stringify(popupTheme));
+      }
+
+      function normalizeHex(value) {
+        const raw = String(value || "").trim().replace(/^#/, "");
+        if (/^[0-9a-fA-F]{3}$/.test(raw)) return `#${raw.split("").map((char) => char + char).join("")}`.toLowerCase();
+        if (/^[0-9a-fA-F]{6}$/.test(raw)) return `#${raw.toLowerCase()}`;
+        return "";
+      }
+
+      function applyPopupTheme() {
+        const accent = normalizeHex(popupTheme.accent) || DEFAULT_THEME.accent;
+        const paper = normalizeHex(popupTheme.paper) || DEFAULT_THEME.paper;
+        document.documentElement.style.setProperty("--accent", accent);
+        document.documentElement.style.setProperty("--accent-dark", darkenHex(accent, 0.32));
+        document.documentElement.style.setProperty("--soft", `${accent}18`);
+        document.documentElement.style.setProperty("--paper", paper);
+        elements.uiAccent.value = accent;
+        elements.uiPaper.value = paper;
+      }
+
+      function darkenHex(hex, amount) {
+        const safe = normalizeHex(hex) || DEFAULT_THEME.accent;
+        const value = parseInt(safe.slice(1), 16);
+        const r = Math.max(0, Math.round(((value >> 16) & 255) * (1 - amount)));
+        const g = Math.max(0, Math.round(((value >> 8) & 255) * (1 - amount)));
+        const b = Math.max(0, Math.round((value & 255) * (1 - amount)));
+        return `#${[r, g, b].map((item) => item.toString(16).padStart(2, "0")).join("")}`;
+      }
+
+      function showToast(message) {
+        const toast = document.createElement("div");
+        toast.className = "toast";
+        toast.textContent = message;
+        elements.toastStack.appendChild(toast);
+        window.setTimeout(() => {
+          toast.style.opacity = "0";
+          toast.style.transform = "translateY(8px) scale(0.98)";
+        }, 1500);
+        window.setTimeout(() => toast.remove(), 1900);
+      }
+
+      function reset() {
+        document.querySelectorAll("input, textarea").forEach((input) => {
+          if (input.type === "color") return;
+          if (input.type === "checkbox") input.checked = false;
+          else input.value = "";
+        });
+        elements.textValue.value = "https://dewflash.dev";
+        activeMode = "text";
+        elements.errorLevel.value = "M";
+        elements.exportSize.value = "1024";
+        elements.foreground.value = "#111111";
+        elements.background.value = "#ffffff";
+        elements.backgroundMode.value = "solid";
+        renderMode();
+      }
+
+      function renderMode() {
+        elements.tabs.forEach((tab) => tab.classList.toggle("active", tab.dataset.mode === activeMode));
+        elements.fields.forEach((field) => field.classList.toggle("hidden", field.dataset.fields !== activeMode));
+        render();
+      }
+
+      document.querySelectorAll("input, textarea, select").forEach((input) => {
+        input.addEventListener("input", render);
+        input.addEventListener("change", render);
+      });
+      elements.errorLevel.addEventListener("change", render);
+      elements.exportSize.addEventListener("change", render);
+      elements.backgroundMode.addEventListener("change", render);
+      elements.tabs.forEach((tab) => tab.addEventListener("click", () => {
+        activeMode = tab.dataset.mode;
+        renderMode();
+      }));
+      elements.themeButton.addEventListener("click", () => {
+        elements.themeButton.classList.toggle("active");
+        elements.themePanel.classList.toggle("active");
+      });
+      elements.uiAccent.addEventListener("input", () => {
+        popupTheme.accent = elements.uiAccent.value;
+        applyPopupTheme();
+        savePopupTheme();
+      });
+      elements.uiPaper.addEventListener("input", () => {
+        popupTheme.paper = elements.uiPaper.value;
+        applyPopupTheme();
+        savePopupTheme();
+      });
+      elements.copyPngButton.addEventListener("click", copyPng);
+      elements.savePngButton.addEventListener("click", savePng);
+      elements.copySvgButton.addEventListener("click", copySvg);
+      elements.saveSvgButton.addEventListener("click", saveSvg);
+      elements.resetButton.addEventListener("click", reset);
+      window.dewQRaftNativeDone = (message) => showToast(message || "Done");
+
+      render();
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,15 @@
+DewQRaft 1.0
+
+ZIP install:
+1. Open DewQRaft-1.0.zip.
+2. Drag DewQRaft.app into Applications.
+3. Open it from Applications. If macOS blocks first launch, right-click the app and choose Open.
+
+DMG install:
+1. Open DewQRaft-1.0.dmg.
+2. Drag DewQRaft.app into Applications.
+3. Open it from Applications. If macOS blocks first launch, right-click the app and choose Open.
+
+Notes:
+- DewQRaft is offline and does not need internet access.
+- This build is unsigned with an Apple Developer ID, so macOS may show a trust prompt.
