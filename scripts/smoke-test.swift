@@ -148,7 +148,7 @@ let phaseA = """
   setValue($("emailTo"), "a@b.c");
   setValue($("emailSubject"), "Team lunch Friday?");
   setValue($("emailBody"), "See you & Bob");
-  const mailExpected = "mailto:a@b.c?subject=Team+lunch+Friday%3F&body=See+you+%26+Bob";
+  const mailExpected = "mailto:a@b.c?subject=Team%20lunch%20Friday%3F&body=See%20you%20%26%20Bob";
   check("email payload", payload() === mailExpected, payload());
 
   // 5. Contact payload (BASELINE: LF line endings, no N: property)
@@ -159,17 +159,18 @@ let phaseA = """
   const vcardExpected = [
     "BEGIN:VCARD",
     "VERSION:3.0",
+    "N:Ada Lovelace;;;;",
     "FN:Ada Lovelace",
     "TEL:+65 9123 4567",
     "EMAIL:ada@lovelace.dev",
     "END:VCARD"
-  ].join("\\n");
+  ].join("\\r\\n");
   check("contact payload", payload() === vcardExpected, JSON.stringify(payload()));
 
   // 6. Phone payload (BASELINE: inner whitespace kept)
   tab("phone");
   setValue($("phoneNumber"), " +65 9123 4567 ");
-  check("phone payload", payload() === "tel:+65 9123 4567", payload());
+  check("phone payload", payload() === "tel:+6591234567", payload());
 
   // 7. SMS payload strips whitespace and percent-encodes the body
   tab("sms");
@@ -185,14 +186,17 @@ let phaseA = """
   // 9. Oversized content fails gracefully
   setValue($("textValue"), "x".repeat(3000));
   check("overflow shows error", statusIsError() && buttonsDisabled(), status());
+  check("overflow message friendly", status() === "Too long for one QR code", status());
 
   // 10. Reset restores defaults
   tab("wifi");
+  setSelect($("wifiSecurity"), "WEP");
   $("resetButton").click();
   check("reset restores payload", payload() === "https://dewflash.dev", payload());
   const textTabActive = document.querySelector('.tab[data-mode="text"]').classList.contains("active");
   check("reset returns to text tab", textTabActive);
   check("reset re-enables actions", !buttonsDisabled());
+  check("reset restores wifi security", $("wifiSecurity").value === "WPA", $("wifiSecurity").value);
 
   // 11. Popup theme panel
   $("themeButton").click();
@@ -260,6 +264,7 @@ if let message = clickAndCapture("copySvgButton") {
     check("bridge copySvg type", message["type"] as? String == "copyText")
     check("bridge copySvg label", message["label"] as? String == "SVG copied")
     check("bridge copySvg is svg", text.hasPrefix("<svg xmlns=\"http://www.w3.org/2000/svg\"") && text.contains("<rect"))
+    check("bridge copySvg crisp edges", text.contains("shape-rendering=\"crispEdges\""))
 } else {
     check("bridge copySvg received", false, "no message captured")
 }

@@ -959,8 +959,10 @@
             return contactPayload();
           case "email":
             return mailPayload();
-          case "phone":
-            return elements.phoneNumber.value.trim() ? `tel:${elements.phoneNumber.value.trim()}` : "";
+          case "phone": {
+            const number = elements.phoneNumber.value.replace(/\s+/g, "");
+            return number ? `tel:${number}` : "";
+          }
           case "sms":
             return smsPayload();
           default:
@@ -989,13 +991,16 @@
         const url = elements.contactWebsite.value.trim();
         if (![name, phone, email, org, url].some(Boolean)) return "";
         const lines = ["BEGIN:VCARD", "VERSION:3.0"];
-        if (name) lines.push(`FN:${escapeVcard(name)}`);
+        if (name) {
+          lines.push(`N:${escapeVcard(name)};;;;`);
+          lines.push(`FN:${escapeVcard(name)}`);
+        }
         if (org) lines.push(`ORG:${escapeVcard(org)}`);
         if (phone) lines.push(`TEL:${escapeVcard(phone)}`);
         if (email) lines.push(`EMAIL:${escapeVcard(email)}`);
         if (url) lines.push(`URL:${escapeVcard(url)}`);
         lines.push("END:VCARD");
-        return lines.join("\n");
+        return lines.join("\r\n");
       }
 
       function escapeVcard(value) {
@@ -1004,10 +1009,11 @@
 
       function mailPayload() {
         const to = elements.emailTo.value.trim();
-        const params = new URLSearchParams();
-        if (elements.emailSubject.value.trim()) params.set("subject", elements.emailSubject.value.trim());
-        if (elements.emailBody.value.trim()) params.set("body", elements.emailBody.value.trim());
-        return to || params.toString() ? `mailto:${to}${params.toString() ? `?${params}` : ""}` : "";
+        const parts = [];
+        if (elements.emailSubject.value.trim()) parts.push(`subject=${encodeURIComponent(elements.emailSubject.value.trim())}`);
+        if (elements.emailBody.value.trim()) parts.push(`body=${encodeURIComponent(elements.emailBody.value.trim())}`);
+        const query = parts.join("&");
+        return to || query ? `mailto:${to}${query ? `?${query}` : ""}` : "";
       }
 
       function smsPayload() {
@@ -1015,6 +1021,11 @@
         if (!number) return "";
         const message = elements.smsBody.value.trim();
         return `sms:${number}${message ? `?body=${encodeURIComponent(message)}` : ""}`;
+      }
+
+      function qrErrorMessage(error) {
+        const raw = String(error && error.message ? error.message : error);
+        return raw.includes("code length overflow") ? "Too long for one QR code" : raw;
       }
 
       function render() {
@@ -1041,7 +1052,7 @@
           latest = null;
           elements.qrCanvas.classList.add("hidden");
           elements.emptyQr.classList.remove("hidden");
-          setStatus(error.message, true);
+          setStatus(qrErrorMessage(error), true);
           setActionsDisabled(true);
         }
       }
@@ -1084,7 +1095,7 @@
         const bg = elements.backgroundMode.value === "solid"
           ? `<rect width="100%" height="100%" fill="${elements.background.value}"/>`
           : "";
-        return `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">${bg}<g fill="${elements.foreground.value}">${rects}</g></svg>`;
+        return `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" shape-rendering="crispEdges">${bg}<g fill="${elements.foreground.value}">${rects}</g></svg>`;
       }
 
       function pngDataUrl() {
@@ -1215,6 +1226,7 @@
         });
         elements.textValue.value = "https://dewflash.dev";
         activeMode = "text";
+        elements.wifiSecurity.value = "WPA";
         elements.errorLevel.value = "M";
         elements.exportSize.value = "1024";
         elements.foreground.value = "#111111";
