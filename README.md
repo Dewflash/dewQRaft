@@ -1,49 +1,54 @@
 # DewQRaft
 
-DewQRaft is an offline macOS menu bar utility for crafting QR codes. Click the menu
-bar icon, type, and copy or save a scannable code — no network, no accounts, no Dock
-icon.
+DewQRaft is an offline macOS menu bar utility for crafting QR codes. Open the
+menu bar popup, enter content, then copy or save a scannable code. It has no
+accounts, network requirement, Dock icon, or pre-filled payload.
 
 ## Features
 
-- Payload types: text/link, Wi-Fi, contact (vCard 3.0), email, phone, SMS
-- Live offline rendering (vendored MIT-licensed generator by Kazuhiko Arase)
-- PNG and SVG export via copy or native save panel
-- Adjustable error correction, export size (512–2048 px), ink/paper colours,
-  transparent background
-- Popup accent/paper theme, persisted between launches
+- Text/link, Wi-Fi, contact (vCard 3.0), email, phone, and SMS payloads
+- Live offline rendering using the vendored MIT-licensed generator by Kazuhiko Arase
+- PNG and SVG copy/export with a native macOS save panel
+- Adjustable error correction, export size, code colour, and full QR background colour
+- Four interface layouts with persisted accent and window colours
+- One-click colour reset to the standard Apple-blue neutral appearance
 
 ## Requirements
 
-- macOS 13.0 or later (Apple Silicon or Intel)
+- macOS 13.0 or later
+- Xcode command-line build tools
+
+Release builds are universal binaries for Apple Silicon and Intel Macs.
+
+## Repository layout
+
+- `DewQRaft/` — Swift source, Info.plist, app icon, HTML, and vendored QR resources
+- `DewQRaft.xcodeproj/` — Xcode project definition only
+- `Tests/` — offscreen WKWebView smoke tests
+- `Scripts/` — icon, build, verification, cleanup, and packaging scripts
+- `build/DewQRaft.app` — latest local Release app
+- `release/DewQRaft-1.1.dmg` and `.zip` — current release artifacts
+
+## Commands
+
+```sh
+make build
+make verify
+make clean
+make package
+```
+
+`make build` uses temporary DerivedData/module-cache directories, creates a
+universal Release app, and ad-hoc signs it. `make verify` rebuilds and runs the
+real UI through an offscreen WKWebView; it requires a logged-in macOS GUI
+session. `make package` reads the version from `DewQRaft/Info.plist`, replaces
+stale release files, and creates validated ZIP and DMG artifacts.
+
+When `DewQRaft/Assets/AppIconSource.png` changes, run `make icons` before
+building. The build rejects a stale generated `DewQRaft.icns`.
 
 ## Install
 
-Download `release/DewQRaft-1.1.dmg` (or the `.zip`), drag `DewQRaft.app` into
-Applications, and open it. The app is ad-hoc signed (no Apple Developer ID), so on
-first launch right-click the app and choose Open if macOS blocks it.
-
-## Build from source
-
-```sh
-/bin/zsh scripts/build-mac-app.sh
-```
-
-The app bundle is created at `build/DewQRaft.app`.
-
-## Verify
-
-```sh
-/bin/zsh scripts/verify.sh
-```
-
-Runs plist lint, shell syntax checks, a full build, and a WKWebView smoke test that
-drives the real UI. Requires a logged-in macOS session; opens no windows.
-
-## Release
-
-```sh
-/bin/zsh scripts/package-release.sh 1.1
-```
-
-Creates the ZIP, DMG, and `INSTALL.txt` in `release/`.
+Open `release/DewQRaft-1.1.dmg` or `.zip`, then drag `DewQRaft.app` into
+Applications. The app is ad-hoc signed rather than Developer ID notarized, so
+macOS may require right-clicking the app and choosing Open on first launch.

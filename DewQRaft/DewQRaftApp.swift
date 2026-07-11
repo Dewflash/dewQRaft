@@ -93,6 +93,7 @@ final class WebViewController: NSViewController, WKScriptMessageHandler {
         configuration.userContentController.add(self, name: "dewQRaftNative")
 
         let view = WKWebView(frame: .zero, configuration: configuration)
+        view.underPageBackgroundColor = .clear
         return view
     }()
 
@@ -235,7 +236,13 @@ private enum StatusIcon {
     }
 }
 
-let app = NSApplication.shared
-let delegate = AppDelegate()
-app.delegate = delegate
-app.run()
+@main
+private enum DewQRaftApplication {
+    private static let delegate = AppDelegate()
+
+    static func main() {
+        let app = NSApplication.shared
+        app.delegate = delegate
+        app.run()
+    }
+}

@@ -4,15 +4,15 @@
 // synthetic events, and asserts payload construction, QR rendering, and the
 // dewQRaftNative bridge protocol (the exact messages the Swift app consumes).
 //
-// Usage: swift scripts/smoke-test.swift [path/to/index.html]
+// Usage: swift Tests/SmokeTest.swift [path/to/index.html]
 // Exits 0 when every check passes, 1 otherwise.
 // Needs a logged-in GUI session (WebKit spawns helper processes); it opens no windows.
 
 import WebKit
 
 let scriptURL = URL(fileURLWithPath: CommandLine.arguments[0]).standardizedFileURL
-let defaultHTML = scriptURL.deletingLastPathComponent().deletingLastPathComponent()
-    .appendingPathComponent("index.html")
+let rootURL = scriptURL.deletingLastPathComponent().deletingLastPathComponent()
+let defaultHTML = rootURL.appendingPathComponent("DewQRaft/Resources/index.html")
 let htmlURL = CommandLine.arguments.dropFirst().first.map { URL(fileURLWithPath: $0) } ?? defaultHTML
 
 guard FileManager.default.fileExists(atPath: htmlURL.path) else {
@@ -29,6 +29,14 @@ final class SmokeHost: NSObject, WKNavigationDelegate, WKScriptMessageHandler {
     init(htmlURL: URL) {
         let configuration = WKWebViewConfiguration()
         configuration.websiteDataStore = .nonPersistent()
+        let legacyThemeSeed = WKUserScript(
+            source: """
+            localStorage.setItem("dewqraft.popupTheme.v1", JSON.stringify({ accent: "#8a2500", paper: "#5a3511" }));
+            """,
+            injectionTime: .atDocumentStart,
+            forMainFrameOnly: true
+        )
+        configuration.userContentController.addUserScript(legacyThemeSeed)
         webView = WKWebView(frame: NSRect(x: 0, y: 0, width: 560, height: 520), configuration: configuration)
         super.init()
         webView.configuration.userContentController.add(self, name: "dewQRaftNative")
@@ -81,7 +89,8 @@ func evalString(_ js: String) -> String {
     var done = false
     host.webView.evaluateJavaScript(js) { value, error in
         if let error {
-            result = "JSERROR: \(error.localizedDescription)"
+            let details = (error as NSError).userInfo
+            result = "JSERROR: \(error.localizedDescription) — \(details)"
         } else {
             result = (value as? String) ?? "JSERROR: non-string result"
         }
@@ -117,12 +126,28 @@ let phaseA = """
   };
 
   // 1. Defaults
-  check("default payload", payload() === "https://dewflash.dev", payload());
-  check("default status ready", status() === "Ready" && !statusIsError(), status());
-  check("default canvas visible", canvasVisible());
-  check("default actions enabled", !buttonsDisabled());
+  check("default payload is empty", payload() === "Empty", payload());
+  check("default status is empty", status() === "Empty" && !statusIsError(), status());
+  check("default canvas hidden", !canvasVisible());
+  check("default actions disabled", buttonsDisabled());
+  setValue($("textValue"), "https://example.com");
+  check("entered text renders", status() === "Ready" && canvasVisible() && !buttonsDisabled(), status());
   check("default canvas size 1024", $("qrCanvas").width === 1024, $("qrCanvas").width);
   check("qr has dark modules", darkPixelCount() > 5000, darkPixelCount());
+  check("transparent background control removed", !$("backgroundMode"));
+  setValue($("background"), "#ff00ff");
+  const backgroundPixel = Array.from($("qrCanvas").getContext("2d").getImageData(0, 0, 1, 1).data);
+  check("qr background color renders opaque",
+    backgroundPixel.join(",") === "255,0,255,255", backgroundPixel.join(","));
+  const frameBackground = getComputedStyle($("qrFrame")).backgroundColor;
+  check("qr background fills entire preview card",
+    frameBackground === "rgb(255, 0, 255)", frameBackground);
+  setValue($("background"), "#ffffff");
+  const defaultAccent = document.documentElement.style.getPropertyValue("--accent").trim();
+  const defaultPaper = document.documentElement.style.getPropertyValue("--paper").trim();
+  check("legacy popup accent reset", defaultAccent === "#0a84ff", defaultAccent);
+  check("legacy popup paper reset", defaultPaper === "#f2f4f7", defaultPaper);
+  check("default look focused", document.documentElement.dataset.look === "focused", document.documentElement.dataset.look);
 
   // 2. Error level changes output
   const pngM = $("qrCanvas").toDataURL("image/png");
@@ -192,20 +217,93 @@ let phaseA = """
   tab("wifi");
   setSelect($("wifiSecurity"), "WEP");
   $("resetButton").click();
-  check("reset restores payload", payload() === "https://dewflash.dev", payload());
+  check("reset clears payload", payload() === "Empty", payload());
   const textTabActive = document.querySelector('.tab[data-mode="text"]').classList.contains("active");
   check("reset returns to text tab", textTabActive);
-  check("reset re-enables actions", !buttonsDisabled());
+  check("reset disables actions", buttonsDisabled());
   check("reset restores wifi security", $("wifiSecurity").value === "WPA", $("wifiSecurity").value);
+  check("reset preserves look", document.documentElement.dataset.look === "focused", document.documentElement.dataset.look);
+  const originalLook = document.querySelector('input[name="uiLook"][value="original"]');
+  const focusedLook = document.querySelector('input[name="uiLook"][value="focused"]');
+  const nativeLook = document.querySelector('input[name="uiLook"][value="native"]');
+  const commandLook = document.querySelector('input[name="uiLook"][value="command"]');
+  setChecked(commandLook, true);
+  const commandPreviewRect = document.querySelector(".preview-card").getBoundingClientRect();
+  const commandQrRect = $("qrFrame").getBoundingClientRect();
+  const commandCenterDelta = Math.abs(
+    (commandPreviewRect.left + commandPreviewRect.width / 2) -
+    (commandQrRect.left + commandQrRect.width / 2)
+  );
+  check("command qr frame is horizontally centered", commandCenterDelta <= 0.5, commandCenterDelta);
+  setChecked(focusedLook, true);
 
   // 11. Popup theme panel
   $("themeButton").click();
   check("theme panel opens", $("themePanel").classList.contains("active"));
+  const textEditor = document.querySelector('[data-fields="text"]');
+  const payloadTabs = document.querySelector(".tabs");
+  const qrAppearance = document.querySelector(".settings");
+  const lookPanel = $("lookPanel");
+  check("theme view hides editor controls",
+    getComputedStyle(textEditor).display === "none" &&
+    getComputedStyle(payloadTabs).display === "none" &&
+    getComputedStyle($("resetButton")).display === "none" &&
+    getComputedStyle(document.querySelector(".actions")).display === "none");
+  check("theme view keeps appearance controls",
+    getComputedStyle(lookPanel).display === "grid" &&
+    getComputedStyle(qrAppearance).display === "grid");
+  const settingsGeometry = () => [".topbar", ".panel", ".preview-card", "#qrFrame"].flatMap((selector) => {
+    const rect = document.querySelector(selector).getBoundingClientRect();
+    return [rect.left, rect.top, rect.width, rect.height];
+  });
+  const sameGeometry = (a, b) => a.every((value, index) => Math.abs(value - b[index]) <= 0.5);
+  const focusedSettingsGeometry = settingsGeometry();
+  const settingsLooks = [nativeLook, commandLook, originalLook, focusedLook];
+  const stableSettingsLayout = settingsLooks.every((look) => {
+    setChecked(look, true);
+    return sameGeometry(settingsGeometry(), focusedSettingsGeometry);
+  });
+  check("all looks share one settings layout", stableSettingsLayout);
+  setChecked(commandLook, true);
+  const panelRect = document.querySelector(".panel").getBoundingClientRect();
+  const previewRect = document.querySelector(".preview-card").getBoundingClientRect();
+  const lookOptionsFit = Array.from(document.querySelectorAll(".look-option")).every((option) => {
+    const rect = option.getBoundingClientRect();
+    return rect.left >= panelRect.left && rect.right <= panelRect.right;
+  });
+  check("command settings panel does not overlap preview",
+    panelRect.right <= previewRect.left, `${panelRect.right} > ${previewRect.left}`);
+  check("command look choices stay inside panel", lookOptionsFit);
+  setChecked(originalLook, true);
+  check("look switches to original", document.documentElement.dataset.look === "original", document.documentElement.dataset.look);
+  setChecked(focusedLook, true);
+  check("look switches back to focused", document.documentElement.dataset.look === "focused", document.documentElement.dataset.look);
   setValue($("uiAccent"), "#ff0000");
   const accent = document.documentElement.style.getPropertyValue("--accent").trim();
   check("accent applies", accent === "#ff0000", accent);
+  setValue($("uiPaper"), "#00ff00");
+  setValue($("foreground"), "#0000ff");
+  setValue($("background"), "#ffff00");
+  $("resetColorsButton").click();
+  const resetTheme = JSON.parse(localStorage.getItem("dewqraft.popupTheme.v2"));
+  check("reset colours restores apple interface defaults",
+    $("uiAccent").value === "#0a84ff" &&
+    $("uiPaper").value === "#f2f4f7" &&
+    resetTheme.accent === "#0a84ff" &&
+    resetTheme.paper === "#f2f4f7");
+  check("reset colours restores qr defaults",
+    $("foreground").value === "#111111" &&
+    $("background").value === "#ffffff" &&
+    getComputedStyle($("qrFrame")).backgroundColor === "rgb(255, 255, 255)");
+  check("reset colours preserves selected look",
+    document.documentElement.dataset.look === "focused", document.documentElement.dataset.look);
   $("themeButton").click();
   check("theme panel closes", !$("themePanel").classList.contains("active"));
+  check("theme view restores editor controls",
+    getComputedStyle(textEditor).display !== "none" &&
+    getComputedStyle(payloadTabs).display !== "none" &&
+    getComputedStyle($("resetButton")).display !== "none" &&
+    getComputedStyle(document.querySelector(".actions")).display === "grid");
 
   return JSON.stringify(results);
 })()
@@ -246,7 +344,13 @@ func clickAndCapture(_ buttonId: String) -> [String: Any]? {
     return host.drainBridgeMessages().first
 }
 
-_ = evalString("document.getElementById(\"resetButton\").click(); \"reset\"")
+_ = evalString("""
+document.getElementById("resetButton").click();
+const textValue = document.getElementById("textValue");
+textValue.value = "https://example.com";
+textValue.dispatchEvent(new Event("input", { bubbles: true }));
+"ready"
+""")
 
 if let message = clickAndCapture("copyPngButton") {
     let base64 = message["base64"] as? String ?? ""

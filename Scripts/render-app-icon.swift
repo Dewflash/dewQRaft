@@ -5,7 +5,7 @@ let output = CommandLine.arguments.dropFirst().first ?? "/tmp/DewQRaft.iconset"
 let outputURL = URL(fileURLWithPath: output)
 let scriptURL = URL(fileURLWithPath: CommandLine.arguments[0]).standardizedFileURL
 let rootURL = scriptURL.deletingLastPathComponent().deletingLastPathComponent()
-let sourceURL = rootURL.appendingPathComponent("assets/app-icon-source.png")
+let sourceURL = rootURL.appendingPathComponent("DewQRaft/Assets/AppIconSource.png")
 
 try? FileManager.default.removeItem(at: outputURL)
 try FileManager.default.createDirectory(at: outputURL, withIntermediateDirectories: true)

@@ -1,4 +1,15 @@
 .DS_Store
-build/
+.claude/
+.codex/
+*.xcuserstate
+xcuserdata/
+*.xcodeproj/project.xcworkspace/
 DerivedData/
-release/*/
+.build/
+.swiftpm/
+
+build/*
+
+release/*
+!release/*.dmg
+!release/*.zip

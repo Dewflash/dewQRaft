@@ -9,8 +9,8 @@ worth more than a green lie.**
 | # | Check | How | Pass condition | Result |
 |---|-------|-----|----------------|--------|
 | 1 | Install & first launch | Mount DMG, drag to /Applications, right-click → Open | Menu bar icon appears; no Dock icon | NOT RUN |
-| 2 | Popup opens | Left-click menu bar icon | 560×520 popup with default QR and payload `https://dewflash.dev` | NOT RUN |
-| 3 | Default URL scans | Scan preview with phone camera | Phone offers to open dewflash.dev | NOT RUN |
+| 2 | Popup opens | Left-click menu bar icon | 560×520 popup opens with an empty Content field and no QR | NOT RUN |
+| 3 | First text renders | Enter `https://example.com` | QR appears and phone offers to open example.com | NOT RUN |
 | 4 | Text + emoji | Text tab: `héllo 🚀 test` | Renders; scan shows the exact text | NOT RUN |
 | 5 | Wi-Fi payload scans | Wi-Fi tab: real SSID/password | Phone offers to join that network | NOT RUN |
 | 6 | Contact scans | Contact tab: name+phone+email | Phone offers a contact card showing the name | NOT RUN |
@@ -22,12 +22,12 @@ worth more than a green lie.**
 | 12 | Cancel save | Save SVG… → Cancel | No file written | NOT RUN |
 | 13 | Copy SVG | Copy SVG → paste in TextEdit (plain text) | Text starts `<svg xmlns=` | NOT RUN |
 | 14 | Save SVG renders | Save SVG… → open in Safari | QR renders; no white hairlines between modules when zoomed | NOT RUN |
-| 15 | Transparent background | Background: Transparent → Save PNG | Preview shows checkerboard behind modules | NOT RUN |
-| 16 | Custom colours scan | Ink `#1c2430`, paper `#f4efe5` | Colours visible; phone still scans it | NOT RUN |
+| 15 | Full background colour | Set QR Background to blue → Save PNG | Entire QR card/export background is blue | NOT RUN |
+| 16 | Custom colours scan | Code `#1c2430`, Background `#f4efe5` | Colours visible; phone still scans it | NOT RUN |
 | 17 | Error correction | Correction: Very high | Code gets denser; still scans | NOT RUN |
 | 18 | Export size honest | Size 2048 → Save PNG → Preview inspector | Image is 2048×2048 px | NOT RUN |
 | 19 | Overflow handled | Paste ~3000 chars in Text | Buttons disable; status reads "Too long for one QR code" | NOT RUN |
-| 20 | Reset | Change several fields/selects → Reset | Defaults restored; Wi-Fi security back to WPA/WPA2 | NOT RUN |
+| 20 | Reset | Change several fields/selects → Reset | Content clears; Wi-Fi security returns to WPA/WPA2 | NOT RUN |
 | 21 | Theme persists | Change accent+paper → quit → relaunch | Custom colours still applied | NOT RUN |
 | 22 | Launch at Login | Right-click icon → toggle on, check System Settings → Login Items; toggle off | Item checkmark and System Settings agree in both directions | SKIPPED (plan not landed) |
 | 23 | Quit | Right-click icon → Quit DewQRaft | App exits; icon disappears | NOT RUN |
