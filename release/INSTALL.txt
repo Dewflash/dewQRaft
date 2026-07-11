@@ -1,12 +1,12 @@
-DewQRaft 1.0
+DewQRaft 1.1
 
 ZIP install:
-1. Open DewQRaft-1.0.zip.
+1. Open DewQRaft-1.1.zip.
 2. Drag DewQRaft.app into Applications.
 3. Open it from Applications. If macOS blocks first launch, right-click the app and choose Open.
 
 DMG install:
-1. Open DewQRaft-1.0.dmg.
+1. Open DewQRaft-1.1.dmg.
 2. Drag DewQRaft.app into Applications.
 3. Open it from Applications. If macOS blocks first launch, right-click the app and choose Open.
 
